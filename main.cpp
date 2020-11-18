@@ -8,7 +8,6 @@ class node;
 
 int nodeId = 1, switchId = 1;
 
-
 class ARP{
     public:
     string senderIp, senderMac,  destIP, destMac,  operationCode, hardwareType, protocolType, hardwareLength, protocolLength;
@@ -39,10 +38,6 @@ class ARP{
         cout << "\t\t-------------------------------------------------------------------------------------------------\n";
         cout << "\t\t|\t    " << hardwareType << "       \t|\t  " << hardwareLength << "        \t|\t   " << protocolType << "  \t|\t   " << protocolLength << "        \t|" << endl;
         cout << "\t\t-------------------------------------------------------------------------------------------------\n";
-
-
-
-
       }
 };
 
@@ -162,9 +157,6 @@ void* nodeFunc(void* arg){
     node *client = idToNode[*id];
     
     while(1){    
-       
-       
-       
         if(client->requests.size() > 0){
             string senderIpAddress = client->requests.back();
             client->requests.pop_back();
@@ -247,7 +239,7 @@ int main()
     cout << "Press 2: For Custom testCase" << endl;    
     
     cin >> type;
-
+    cout << type << endl;
     if(type == 1){
 
         cout << "In Custom Input There is 3 clients Connected to Switch\n" << endl;
@@ -277,7 +269,7 @@ int main()
             int a = 1;
             cout << "Enter 0 to exit\nEnter 1 to continue ";
             cin >> a;
-            // cout << a << endl;
+            cout << a << endl;
             if(a == 0)
                 break;
 
@@ -287,13 +279,15 @@ int main()
                 int sourceId, destId;
                 cout <<"\n\nEnter Source Client id ";
                 cin >> sourceId;
-
+                cout << sourceId << endl;
+             
                 cout <<"\nEnter Destination Client id ";
                 cin >> destId;
+                cout << destId << endl;
 
                 node *tempClientSource = idToNode[sourceId], *tempDestSource = idToNode[destId];
 
-                cout << " Now Source will find mac Address of the Destination whose Ip address is : ( " << tempDestSource->ip << " )" << endl;
+                cout << "Now Source(id =" << sourceId << ") will find mac Address of the Destination (id = "<< destId <<") whose Ip address is : ( " << tempDestSource->ip << " )" << endl;
                 sleep(1);
                 cout << endl;
                 tempClientSource->storeRequest(tempDestSource->ip);
@@ -315,6 +309,7 @@ int main()
 
         cout << "Enter Number of clients\n";
         cin >> numberOfClients;
+        cout << numberOfClients << endl;
 
         pthread_t ptid[numberOfClients];
         
@@ -340,8 +335,10 @@ int main()
 
         while(1){
             int a = 1;
-            cout << "Enter 0 to exit\nEnter 1 to continue ";
+            cout << "\nEnter 0 to exit\nEnter 1 to continue ";
             cin >> a;
+
+            cout << a << endl;
 
             if(a == 0)
                 break;
@@ -352,17 +349,19 @@ int main()
                 int sourceId, destId;
                 cout <<"\n\nEnter Source Client id ";
                 cin >> sourceId;
+                cout << sourceId << endl;
+                
 
                 cout <<"\nEnter Destination Client id ";
                 cin >> destId;
+                cout << destId << endl;
 
                 node *tempClientSource = idToNode[sourceId], *tempDestSource = idToNode[destId];
 
-                cout << " Now Source will find mac Address of the Destination whose Ip address is : ( " << tempDestSource->ip << " )" << endl;
+                cout << "Now Source(id =" << sourceId << ") will find mac Address of the Destination (id = "<< destId <<") whose Ip address is : ( " << tempDestSource->ip << " )" << endl;
                 sleep(1);
                 cout << endl;
                 tempClientSource->storeRequest(tempDestSource->ip);
-                
             }
             sleep(10);
         }
