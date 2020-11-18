@@ -237,62 +237,141 @@ int main()
   
     Switch *server = new Switch("Main Server");
 
-    node *client1 = new node("ef:ds:fd:ef:ds:fd", "23.23.23.32", server);
-    node *client2 = new node("ed:ds:wd:re:dd:gd", "23.53.33.23", server);
-    node *client3 = new node("ed:sd:w3:r0:2d:1d", "22.23.23.32", server);
-  
-    pthread_t ptid1, ptid2, ptid3, ptid4;
-
+    pthread_t ptid1;
     int id = server->id;
     pthread_create(&ptid1, NULL, switchFunc, &id);
     idToSwitch[id] = server;
+
+    int type = 1;
+    cout << "Press 1: For Inbuilt testCase" << endl;
+    cout << "Press 2: For Custom testCase" << endl;    
     
-    int id1 = client1->id;
-    pthread_create(&ptid2, NULL, nodeFunc, &id1);
-    idToNode[id1] = client1;
+    cin >> type;
+
+    if(type == 1){
+
+        cout << "In Custom Input There is 3 clients Connected to Switch\n" << endl;
+
+        sleep(1);
+
+        node *client1 = new node("ef:ds:fd:ef:ds:fd", "23.23.23.01", server);
+        node *client2 = new node("ed:ds:wd:re:dd:gd", "23.53.33.02", server);
+        node *client3 = new node("ed:sd:w3:r0:2d:1d", "22.23.23.03", server);
     
+        pthread_t  ptid2, ptid3, ptid4;
+    
+        int id1 = client1->id;
+        pthread_create(&ptid2, NULL, nodeFunc, &id1);
+        idToNode[id1] = client1;
+        
 
-    int id2 = client2->id;
-    pthread_create(&ptid3, NULL, nodeFunc, &id2);
-    idToNode[id2] = client2;
-   
-    int id3 = client3->id;
-    pthread_create(&ptid4, NULL, nodeFunc, &id3);
-    idToNode[id3] = client3;
+        int id2 = client2->id;
+        pthread_create(&ptid3, NULL, nodeFunc, &id2);
+        idToNode[id2] = client2;
+    
+        int id3 = client3->id;
+        pthread_create(&ptid4, NULL, nodeFunc, &id3);
+        idToNode[id3] = client3;
 
-    while(1){
-        int a = 1;
-        cout << "Enter 0 to exit\n1 to continue ";
-        cin >> a;
-        // cout << a << endl;
-        if(a == 0)
-            break;
+        while(1){
+            int a = 1;
+            cout << "Enter 0 to exit\nEnter 1 to continue ";
+            cin >> a;
+            // cout << a << endl;
+            if(a == 0)
+                break;
 
-        else{
-            printClients();
-            cout << endl;
-            int sourceId, destId;
-            cout <<"\n\nEnter Source Client id ";
-            cin >> sourceId;
+            else{
+                printClients();
+                cout << endl;
+                int sourceId, destId;
+                cout <<"\n\nEnter Source Client id ";
+                cin >> sourceId;
 
-            cout <<"\nEnter Destination Client id ";
-            cin >> destId;
+                cout <<"\nEnter Destination Client id ";
+                cin >> destId;
 
-            node *tempClientSource = idToNode[sourceId], *tempDestSource = idToNode[destId];
+                node *tempClientSource = idToNode[sourceId], *tempDestSource = idToNode[destId];
 
-            cout << " Now Source will find mac Address of the Destination whose Ip address is : ( " << tempDestSource->ip << " )" << endl;
-            sleep(1);
-            cout << endl;
-            tempClientSource->storeRequest(tempDestSource->ip);
-            
+                cout << " Now Source will find mac Address of the Destination whose Ip address is : ( " << tempDestSource->ip << " )" << endl;
+                sleep(1);
+                cout << endl;
+                tempClientSource->storeRequest(tempDestSource->ip);
+                
+            }
+            sleep(10);
         }
-        sleep(10);
+
+        pthread_join(ptid1, NULL); 
+        pthread_join(ptid2, NULL); 
+        pthread_join(ptid3, NULL); 
+        pthread_join(ptid4, NULL);   
     }
 
-	pthread_join(ptid1, NULL); 
-    pthread_join(ptid2, NULL); 
-    pthread_join(ptid3, NULL); 
-    pthread_join(ptid4, NULL); 
- 
+
+    else{
+
+        int numberOfClients = 2;
+
+        cout << "Enter Number of clients\n";
+        cin >> numberOfClients;
+
+        pthread_t ptid[numberOfClients];
+        
+        for(int i = 0; i < numberOfClients; i++){
+
+            string mac = "ef:ds:fd:ef:ds:", ip = "23.23.23.";
+            
+            if(i >= 10){
+                mac += to_string(i);
+                ip += to_string(i);
+            }
+
+            else{
+                mac += "0"+ to_string(i);
+                ip += "0"+ to_string(i);
+            }
+
+            node *client1 = new node(mac, ip, server);
+            int id1 = client1->id;
+            pthread_create(&ptid[i], NULL, nodeFunc, &client1->id);
+            idToNode[id1] = client1;
+        }
+
+        while(1){
+            int a = 1;
+            cout << "Enter 0 to exit\nEnter 1 to continue ";
+            cin >> a;
+
+            if(a == 0)
+                break;
+
+            else{
+                printClients();
+                cout << endl;
+                int sourceId, destId;
+                cout <<"\n\nEnter Source Client id ";
+                cin >> sourceId;
+
+                cout <<"\nEnter Destination Client id ";
+                cin >> destId;
+
+                node *tempClientSource = idToNode[sourceId], *tempDestSource = idToNode[destId];
+
+                cout << " Now Source will find mac Address of the Destination whose Ip address is : ( " << tempDestSource->ip << " )" << endl;
+                sleep(1);
+                cout << endl;
+                tempClientSource->storeRequest(tempDestSource->ip);
+                
+            }
+            sleep(10);
+        }
+
+        pthread_join(ptid1, NULL); 
+
+        for(int i = 0; i < numberOfClients; i++)
+            pthread_join(ptid[i], NULL); 
+
+    }
     return 0; 
 }
