@@ -1,8 +1,10 @@
 #include <bits/stdc++.h> 
 #include <thread> 
 #include <unistd.h> 
+#define buffer_size 2
 
 using namespace std; 
+
 
 class node;
 
@@ -39,10 +41,6 @@ class ARP{
         cout << "\t\t-------------------------------------------------------------------------------------------------\n";
         cout << "\t\t|\t    " << hardwareType << "       \t|\t  " << hardwareLength << "        \t|\t   " << protocolType << "  \t|\t   " << protocolLength << "        \t|" << endl;
         cout << "\t\t-------------------------------------------------------------------------------------------------\n";
-
-
-
-
       }
 };
 
@@ -103,6 +101,10 @@ class node{
 };
 
 
+void print_buffer_overflow(node *client){
+    cout << "Client " << client->id <<": is dropping the packet due to BUFFER OVERFLOW\n";
+}
+
 unordered_map<int, node*> idToNode;
 unordered_map<int, Switch*> idToSwitch;
 
@@ -124,7 +126,7 @@ void* switchFunc(void* arg){
     Switch *server = idToSwitch[*id];
 
     while(1){
-        sleep(2);
+        // sleep(2);
         if(server->redirect.size() > 0){
             ARP back = server->redirect.back();
             server->redirect.pop_back();
@@ -136,8 +138,13 @@ void* switchFunc(void* arg){
                 cout << endl << "Network Switch: As the destination mac address is ff:ff:ff:ff:ff:ff, so it is broadcast ARP_REQUEST\n";
                 cout << endl << "Network Switch:  Broadcasting the ARP PAcket from Network switch\n\n";
                 for(int i= 0;i < server->neighbours.size();i++){
-                    if(server->neighbours[i]->ip != back.senderIp)
-                        server->neighbours[i]->responses.push_back(back);
+                    if(server->neighbours[i]->ip != back.senderIp){
+                        if(server->neighbours[i]->responses.size() < buffer_size)
+                            server->neighbours[i]->responses.push_back(back);
+
+                        else
+                            print_buffer_overflow(server->neighbours[i]);    
+                    }
                 }
             }
 
@@ -146,7 +153,13 @@ void* switchFunc(void* arg){
                 cout << endl << "Network Switch:  SENDING the ARP_REPLY to client with mac = " << back.destMac << endl << endl;
                 for(int i= 0;i < server->neighbours.size();i++){
                     if(server->neighbours[i]->mac == back.destMac)
-                        server->neighbours[i]->responses.push_back(back);
+                    {
+                        if(server->neighbours[i]->responses.size() < buffer_size)
+                            server->neighbours[i]->responses.push_back(back);
+
+                        else
+                            print_buffer_overflow(server->neighbours[i]);    
+                    }
                 }
             }
                 
@@ -173,7 +186,7 @@ void* nodeFunc(void* arg){
             cout << "Present: \n";
             client->printCache();
 
-            sleep(1);
+            // sleep(1);
 
             if(client->arp_cache.find(senderIpAddress) != client->arp_cache.end()){
                 cout << endl;
@@ -226,7 +239,7 @@ void* nodeFunc(void* arg){
                 }
             }
         }
-        sleep(2);
+        // sleep(2);
     }
 
     pthread_exit(NULL);
@@ -247,12 +260,12 @@ int main()
     cout << "Press 2: For Custom testCase" << endl;    
     
     cin >> type;
-
+    cout << type << endl;
     if(type == 1){
 
-        cout << "In Custom Input There is 3 clients Connected to Switch\n" << endl;
+        cout << "In Custom Input There are 3 clients Connected to Network Switch\n" << endl;
 
-        sleep(1);
+        //sleep(1);
 
         node *client1 = new node("ef:ds:fd:ef:ds:fd", "23.23.23.01", server);
         node *client2 = new node("ed:ds:wd:re:dd:gd", "23.53.33.02", server);
@@ -273,34 +286,15 @@ int main()
         pthread_create(&ptid4, NULL, nodeFunc, &id3);
         idToNode[id3] = client3;
 
-        while(1){
-            int a = 1;
-            cout << "Enter 0 to exit\nEnter 1 to continue ";
-            cin >> a;
-            // cout << a << endl;
-            if(a == 0)
-                break;
 
-            else{
-                printClients();
-                cout << endl;
-                int sourceId, destId;
-                cout <<"\n\nEnter Source Client id ";
-                cin >> sourceId;
 
-                cout <<"\nEnter Destination Client id ";
-                cin >> destId;
+        client1->storeRequest(client2->ip);
+        client2->storeRequest(client3->ip);
+        client3->storeRequest(client1->ip);
+        client1->storeRequest(client2->ip);
 
-                node *tempClientSource = idToNode[sourceId], *tempDestSource = idToNode[destId];
 
-                cout << " Now Source will find mac Address of the Destination whose Ip address is : ( " << tempDestSource->ip << " )" << endl;
-                sleep(1);
-                cout << endl;
-                tempClientSource->storeRequest(tempDestSource->ip);
-                
-            }
-            sleep(10);
-        }
+        while(1){}
 
         pthread_join(ptid1, NULL); 
         pthread_join(ptid2, NULL); 
@@ -315,6 +309,7 @@ int main()
 
         cout << "Enter Number of clients\n";
         cin >> numberOfClients;
+        cout << numberOfClients << endl;
 
         pthread_t ptid[numberOfClients];
         
@@ -342,6 +337,7 @@ int main()
             int a = 1;
             cout << "Enter 0 to exit\nEnter 1 to continue ";
             cin >> a;
+            cout << a << endl;
 
             if(a == 0)
                 break;
@@ -352,19 +348,21 @@ int main()
                 int sourceId, destId;
                 cout <<"\n\nEnter Source Client id ";
                 cin >> sourceId;
+                cout << sourceId << endl;
 
                 cout <<"\nEnter Destination Client id ";
                 cin >> destId;
+                cout << destId << endl;
 
                 node *tempClientSource = idToNode[sourceId], *tempDestSource = idToNode[destId];
 
                 cout << " Now Source will find mac Address of the Destination whose Ip address is : ( " << tempDestSource->ip << " )" << endl;
-                sleep(1);
+                //sleep(1);
                 cout << endl;
                 tempClientSource->storeRequest(tempDestSource->ip);
                 
             }
-            sleep(10);
+            sleep(2);
         }
 
         pthread_join(ptid1, NULL); 
